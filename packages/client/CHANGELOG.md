@@ -1,5 +1,34 @@
 # @modelcontextprotocol/client
 
+## 2.0.0-beta.3
+
+### Patch Changes
+
+- [#2431](https://github.com/modelcontextprotocol/typescript-sdk/pull/2431) [`1b90c96`](https://github.com/modelcontextprotocol/typescript-sdk/commit/1b90c96d11fd17016d2977cae9dd661de3fb84df) Thanks [@morluto](https://github.com/morluto)! - Fix the CommonJS `validators/ajv` subpath so reading the exported `Ajv` class no longer throws `ReferenceError: import_ajv is not defined`. The subpath now re-exports the bundled provider's concrete `Ajv` value in CJS output, matching the existing ESM behavior.
+
+- [#2441](https://github.com/modelcontextprotocol/typescript-sdk/pull/2441) [`561c6d8`](https://github.com/modelcontextprotocol/typescript-sdk/commit/561c6d83456ef98d6c713bbda9837e64337f22c9) Thanks [@felixweinberger](https://github.com/felixweinberger)! - POSTs whose `Content-Type` media type is not `application/json` are now
+  rejected with `415 Unsupported Media Type`; the header is parsed instead of
+  substring-matched. Previously any value merely containing the substring
+  passed the check (for example `text/plain; a=application/json`), case
+  variants were wrongly rejected, and the 2026-07-28 entry did not inspect
+  `Content-Type` at all — requests with a missing or non-JSON header that used
+  to be served on that path now also answer 415. Values with parameters
+  (`application/json; charset=utf-8`, including malformed parameter sections
+  like `application/json;`) continue to work. SDK clients always send the
+  correct header and are unaffected.
+
+    The new `isJsonContentType(header)` helper is exported for transport and
+    framework-adapter authors — custom entries composing the exported building
+    blocks (`classifyInboundRequest`, `PerRequestHTTPServerTransport`) must apply
+    it themselves. The hono adapter's JSON body pre-parse and the client's
+    response dispatch now use the same parsed-media-type comparison.
+
+- [#2384](https://github.com/modelcontextprotocol/typescript-sdk/pull/2384) [`ce2f65d`](https://github.com/modelcontextprotocol/typescript-sdk/commit/ce2f65db0e019506f4d2526466ec8cc7106de98e) Thanks [@felixweinberger](https://github.com/felixweinberger)! - `instanceof` on the SDK error classes (`ProtocolError` and its typed subclasses, `SdkError`/`SdkHttpError`, `OAuthError`, and the client's `SseError`, `UnauthorizedError`, and OAuth-client-flow error family — `OAuthClientFlowError` and its subclasses) now works across separately bundled copies of the SDK. The classes match by a stable brand (via `Symbol.hasInstance` and a registry symbol) instead of prototype identity, so a process that uses both `@modelcontextprotocol/client` and `@modelcontextprotocol/server` - a gateway, host, or in-process test - can check errors constructed by either package against the class re-exported by the other. Ordinary prototype-based `instanceof` is preserved as a fallback; user-defined subclasses keep plain prototype semantics. Notes: cross-bundle matching requires both copies to be at or after this release; brands assert identity, not field shape, across versions - keep reading fields defensively. As a side effect, a foreign-bundle `SdkError` used as an abort reason is now rethrown as-is instead of being wrapped as a `RequestTimeout`. Branded hierarchies additionally expose an explicit static guard, `X.isInstance(value)`, that reads the same brand and narrows in TypeScript — an alternative for codebases that prefer predicate-style checks over `instanceof`. Also: `UnauthorizedError` now sets `error.name` to `'UnauthorizedError'` (previously `'Error'`), and per-package conformance tests enforce that every exported error class participates in branding. Version-negotiation probing now recognizes `UnauthorizedError` (previously a dead name-string check) and propagates it unchanged, so `connect()` on an auth-gated server rejects with the original `UnauthorizedError` (previously wrapped as the `cause` of an `SdkError(EraNegotiationFailed)`) — run `finishAuth()` and reconnect, and the retry probes with the token.
+
+- [#2455](https://github.com/modelcontextprotocol/typescript-sdk/pull/2455) [`cc70c5e`](https://github.com/modelcontextprotocol/typescript-sdk/commit/cc70c5e6a9f9b1c15dcba0bdd019a479b81375de) Thanks [@felixweinberger](https://github.com/felixweinberger)! - Version negotiation no longer discards transport handlers the caller set before `connect()`. The probe window now saves any pre-set `onmessage`/`onerror`/`onclose`, forwards error and close events to them while the probe is in flight, and restores them when the window closes — so `Protocol.connect()` chains them exactly as it does on a plain connect. Previously, connecting with `versionNegotiation` silently cleared pre-set handlers (e.g. an `onerror` used to detect session-expiry auth failures), leaving them permanently detached for the life of the connection.
+
+- [#2425](https://github.com/modelcontextprotocol/typescript-sdk/pull/2425) [`e8de519`](https://github.com/modelcontextprotocol/typescript-sdk/commit/e8de519d3129f46b7528d2999b7641f55be1f091) Thanks [@Sehlani042](https://github.com/Sehlani042)! - Stop advertising validator provider classes from the root client/server type declarations. The provider classes remain available from the explicit validator subpaths.
+
 ## 2.0.0-beta.2
 
 ### Patch Changes

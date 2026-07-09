@@ -1,5 +1,11 @@
 # @modelcontextprotocol/core-internal
 
+## 2.0.0-beta.2
+
+### Patch Changes
+
+- [#2453](https://github.com/modelcontextprotocol/typescript-sdk/pull/2453) [`0ab5d14`](https://github.com/modelcontextprotocol/typescript-sdk/commit/0ab5d1471d6c7375878316df2930fca77eee1d2a) Thanks [@mattzcarey](https://github.com/mattzcarey)! - Strip RFC 9110 optional whitespace around inbound `MCP-Protocol-Version`, `Mcp-Method`, and `Mcp-Name` values before classifying and validating modern HTTP requests. This keeps valid requests portable across Fetch runtimes that expose raw leading or trailing SP/HTAB through `Headers.get()`.
+
 ## 2.0.0-beta.1
 
 ### Patch Changes
